@@ -7,6 +7,7 @@ Projeto com o objetivo de compreender e aplicar os conceitos de Node.js com Serv
 ### Tecnologias
 
 - Node 16.8.0
+- AWS Serverless
 
 ### Instalação do projeto
 
