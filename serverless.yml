@@ -15,3 +15,13 @@ functions:
       - httpApi:
           path: /
           method: get
+
+  sendResults:
+    handler: /api/handlers.sendResults
+    events:
+      - httpApi:
+          path: /send-results
+          method: post
+          request:
+            schemas:
+              application/json: ${file(./schemas/sendResponse.json)}

@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "start": "serverless offline"
+    "start": "nodemon --exec serverless offline"
   },
   "devDependencies": {
+    "nodemon": "^2.0.22",
     "serverless-offline": "^12.0.4"
   }
 }
