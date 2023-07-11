@@ -1,0 +1,7 @@
+version: '3'
+services:
+  serverless-mongo:
+    image: mvertes/alpine-mongo
+    container_name: serverless-mongo
+    ports:
+      - '27017:27017'

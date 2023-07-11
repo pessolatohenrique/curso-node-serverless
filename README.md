@@ -15,6 +15,12 @@ Realizar o clone do projeto
 
     git clone https://github.com/USER/curso-node-serverless.git
 
+Suba o mongodb via container:
+
+    docker-compose up -d
+
+Modifique a seção "params" do arquivo serverless.yml com as credenciais configuradas
+
 Acesse a pasta do projeto e rode o comando para instalar as dependências npm:
 
     npm install
