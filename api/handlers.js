@@ -1,4 +1,4 @@
-const { MongoClient } = require('mongodb')
+const { MongoClient, ObjectId } = require('mongodb')
 
 async function connectToDatabase() {
   const client = new MongoClient(process.env.MONGODB_CONNECTIONSTRING);
@@ -40,3 +40,21 @@ module.exports.sendResults = async (event) => {
     ),
   };
 };
+
+module.exports.getResult = async (event) => {
+  const { id } = event.pathParameters;
+
+  const connection = await connectToDatabase();
+  const result = await connection.collection("user-answers").findOne({ _id: ObjectId(id) });
+  if (!result) {
+    return {
+      statusCode: 404,
+      body: JSON.stringify({ message: "result not found" })
+    }
+  }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result)
+  }
+}

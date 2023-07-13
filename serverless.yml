@@ -34,3 +34,9 @@ functions:
           request:
             schemas:
               application/json: ${file(./schemas/sendResponse.json)}
+  getResult:
+    handler: /api/handlers.getResult
+    events:
+      - httpApi:
+          path: /result/{id}
+          method: get
