@@ -4,6 +4,8 @@ frameworkVersion: '3'
 params:
   default:
     dbName: *****
+    salt: *****
+    jwt_secret: *****
   dev:
     connectionString: *****
 
@@ -13,6 +15,8 @@ provider:
   environment:
     MONGODB_CONNECTIONSTRING: ${param:connectionString}
     MONGODB_DB_NAME: ${param:dbName}
+    SALT: ${param:salt}
+    JWT_SECRET: ${param:jwt_secret}
 
 plugins:
   - serverless-offline

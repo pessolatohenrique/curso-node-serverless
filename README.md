@@ -19,7 +19,8 @@ Suba o mongodb via container:
 
     docker-compose up -d
 
-Modifique a seção "params" do arquivo serverless.yml com as credenciais configuradas
+Modifique a seção "params" do arquivo serverless.yml com as credenciais configuradas. 
+Os parâmetros SALT e JWT_SECRET são necessários para a autenticação via Bearer Token
 
 Acesse a pasta do projeto e rode o comando para instalar as dependências npm:
 
