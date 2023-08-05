@@ -1,6 +1,8 @@
 const { MongoClient, ObjectId } = require('mongodb');
 const { pbkdf2Sync } = require("crypto");
 const jwt = require("jsonwebtoken");
+const { formatResponse } = require("./utils/request");
+const { validateToken, generateHashPassword, generateToken } = require("./utils/auth");
 
 async function connectToDatabase() {
   const client = new MongoClient(process.env.MONGODB_CONNECTIONSTRING);
@@ -21,49 +23,29 @@ function mapCorrectAnswers(answers) {
   return correctAnswers;
 }
 
-function validateToken(event) {
-  const fullTokenHeader = event?.headers?.authorization;
-  console.log("token header:::", fullTokenHeader);
-  if (!fullTokenHeader) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ message: "not a valid bearer token format" })
-    }
-  }
-  const tokenHeaderValue = fullTokenHeader.split(" ")[1];
-  jwt.verify(tokenHeaderValue, process.env.JWT_SECRET, {
-    audience: "curso-node-serverless"
-  });
-}
-
 module.exports.login = async (event) => {
   const { username, password } = JSON.parse(event.body);
+  const hashedPassword = generateHashPassword(password);
 
   const connection = await connectToDatabase();
-
-  const hashedPassword = pbkdf2Sync(password, process.env.SALT, 100000, 64, 'sha512').toString('hex');
-
   const user = await connection.collection("users").findOne({
     username,
     password: hashedPassword
   });
 
   if (!user) {
-    return {
+    return formatResponse({
       statusCode: 400,
-      body: JSON.stringify({ message: "invalid login or password" })
-    }
+      response: { message: "invalid login or password" }
+    });
   }
 
-  const token = jwt.sign({ username, id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: '24h',
-    audience: 'curso-node-serverless'
-  })
+  const token = generateToken(user);
 
-  return {
+  return formatResponse({
     statusCode: 200,
-    body: JSON.stringify({ token }),
-  };
+    response: { token }
+  });
 }
 
 module.exports.sendResults = async (event) => {
@@ -88,12 +70,10 @@ module.exports.sendResults = async (event) => {
   }
   const { insertedId } = await connection.collection('user-answers').insertOne(result);
 
-  return {
+  return formatResponse({
     statusCode: 200,
-    body: JSON.stringify(
-      { insertedId, ...result }
-    ),
-  };
+    response: insertedId, ...result
+  });
 };
 
 module.exports.getResult = async (event) => {
@@ -110,14 +90,14 @@ module.exports.getResult = async (event) => {
   const connection = await connectToDatabase();
   const result = await connection.collection("user-answers").findOne({ _id: ObjectId(id) });
   if (!result) {
-    return {
+    return formatResponse({
       statusCode: 404,
-      body: JSON.stringify({ message: "result not found" })
-    }
+      response: { message: "result not found" }
+    });
   }
 
-  return {
+  return formatResponse({
     statusCode: 200,
-    body: JSON.stringify(result)
-  }
+    response: result
+  })
 }
