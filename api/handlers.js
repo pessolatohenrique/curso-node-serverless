@@ -1,6 +1,7 @@
 const { MongoClient, ObjectId } = require('mongodb');
 const { pbkdf2Sync } = require("crypto");
 const jwt = require("jsonwebtoken");
+const AWS = require("aws-sdk");
 const { formatResponse } = require("./utils/request");
 const { validateToken, generateHashPassword, generateToken } = require("./utils/auth");
 
@@ -100,4 +101,32 @@ module.exports.getResult = async (event) => {
     statusCode: 200,
     response: result
   })
+}
+
+module.exports.uploadStudents = async (event) => {
+  try {
+    const client = new AWS.S3({
+      s3ForcePathStyle: true,
+      accessKeyId: process.env.S3_ACCESS_KEY,
+      secretAccessKey: process.env.S3_SECRET_KEY,
+      endpoint: new AWS.Endpoint(process.env.S3_ENDPOINT),
+    });
+
+    client.putObject({
+      Bucket: "students-bucket",
+      Key: "teste1.csv",
+      Body: Buffer.from("generic message to test")
+    }, () => "ok");
+
+    return formatResponse({
+      statusCode: 200,
+      response: { message: "Upload with success!" }
+    })
+  } catch (error) {
+    return formatResponse({
+      statusCode: error.statusCode || 500,
+      response: { message: error.message || "Ocorreu um erro" }
+    })
+  }
+
 }

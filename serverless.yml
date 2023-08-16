@@ -6,6 +6,10 @@ params:
     dbName: *****
     salt: *****
     jwt_secret: *****
+    s3_access_key: *****
+    s3_secret_key: *****
+    s3_endpoint: *****
+    
   dev:
     connectionString: *****
 
@@ -17,9 +21,20 @@ provider:
     MONGODB_DB_NAME: ${param:dbName}
     SALT: ${param:salt}
     JWT_SECRET: ${param:jwt_secret}
+    S3_ACCESS_KEY: ${param:s3_access_key}
+    S3_SECRET_KEY: ${param:s3_secret_key}
+    S3_ENDPOINT: ${param:s3_endpoint}
 
 plugins:
   - serverless-offline
+  - serverless-s3-local
+	
+resources:
+  Resources:
+    NewResource:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: students-bucket
 
 functions:
   api:
@@ -28,7 +43,15 @@ functions:
       - httpApi:
           path: /
           method: get
-
+  login:
+    handler: /api/handlers.login
+    events:
+      - httpApi:
+          path: /login
+          method: post
+          request:
+            schemas:
+              application/json: ${file(./schemas/login.json)}
   sendResults:
     handler: /api/handlers.sendResults
     events:
@@ -44,3 +67,9 @@ functions:
       - httpApi:
           path: /result/{id}
           method: get
+  uploadStudents:
+    handler: /api/handlers.uploadStudents
+    events:
+      - httpApi:
+          path: /upload-students
+          method: post
