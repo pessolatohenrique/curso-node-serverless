@@ -1,9 +1,18 @@
 const { MongoClient, ObjectId } = require('mongodb');
 const { pbkdf2Sync } = require("crypto");
 const jwt = require("jsonwebtoken");
-const AWS = require("aws-sdk");
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { formatResponse } = require("./utils/request");
 const { validateToken, generateHashPassword, generateToken } = require("./utils/auth");
+
+const client = new S3Client({
+  forcePathStyle: true,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY,
+    secretAccessKey: process.env.S3_SECRET_KEY
+  },
+  endpoint: "http://localhost:4569",
+});
 
 async function connectToDatabase() {
   const client = new MongoClient(process.env.MONGODB_CONNECTIONSTRING);
@@ -105,18 +114,20 @@ module.exports.getResult = async (event) => {
 
 module.exports.uploadStudents = async (event) => {
   try {
-    const client = new AWS.S3({
-      s3ForcePathStyle: true,
-      accessKeyId: process.env.S3_ACCESS_KEY,
-      secretAccessKey: process.env.S3_SECRET_KEY,
-      endpoint: new AWS.Endpoint(process.env.S3_ENDPOINT),
-    });
-
-    client.putObject({
+    const params = {
       Bucket: "students-bucket",
-      Key: "teste1.csv",
-      Body: Buffer.from("generic message to test")
-    }, () => "ok");
+      Key: "teste2.csv",
+      Body: Buffer.from("generic message to test 1")
+    };
+
+    client
+      .send(
+        new PutObjectCommand(params)
+      )
+      .then(() => formatResponse({
+        statusCode: 200,
+        response: { message: "Upload with success!" }
+      }));
 
     return formatResponse({
       statusCode: 200,
@@ -128,5 +139,19 @@ module.exports.uploadStudents = async (event) => {
       response: { message: error.message || "Ocorreu um erro" }
     })
   }
-
 }
+
+module.exports.hookStudent = async (event, context) => {
+  const eventS3 = event.Records[0].s3;
+
+  const keyS3 = decodeURIComponent(eventS3.object.key.replace(/\+/g, " "));
+
+  const command = new GetObjectCommand({
+    Bucket: "students-bucket",
+    Key: keyS3
+  });
+
+  const response = await client.send(command);
+  const responseCSV = await response.Body.transformToString();
+  console.log("response CSV:::", responseCSV);
+};

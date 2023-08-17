@@ -73,3 +73,10 @@ functions:
       - httpApi:
           path: /upload-students
           method: post
+  hookStudent:
+    handler: /api/handlers.hookStudent
+    events:
+      - s3:
+          bucket: students-bucket
+          event: s3:*
+

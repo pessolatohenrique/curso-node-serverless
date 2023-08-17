@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "nodemon --exec serverless offline"
+    "start": "nodemon --exec serverless offline --ignore buckets"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",
@@ -8,7 +8,7 @@
     "serverless-s3-local": "^0.7.2"
   },
   "dependencies": {
-    "aws-sdk": "^2.1438.0",
+    "@aws-sdk/client-s3": "^3.391.0",
     "jsonwebtoken": "^9.0.1",
     "mongodb": "^4.12.1"
   }
