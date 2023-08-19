@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.391.0",
+    "fast-csv": "^4.3.6",
     "jsonwebtoken": "^9.0.1",
     "mongodb": "^4.12.1"
   }

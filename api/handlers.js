@@ -4,6 +4,10 @@ const jwt = require("jsonwebtoken");
 const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { formatResponse } = require("./utils/request");
 const { validateToken, generateHashPassword, generateToken } = require("./utils/auth");
+const { join, resolve } = require('path');
+const { readFile } = require('fs/promises');
+const { parse } = require('fast-csv');
+const { error } = require('console');
 
 const client = new S3Client({
   forcePathStyle: true,
@@ -31,6 +35,24 @@ function mapCorrectAnswers(answers) {
   }, 0);
 
   return correctAnswers;
+}
+
+async function proccessCsvData(data) {
+  const result = await new Promise((resolve, reject) => {
+    const students = [];
+
+    const stream = parse({ headers: ["nome", "email"], renameHeaders: true })
+      .on("data", (student) => students.push(student))
+      .on("error", (error) => reject(new Error(error)))
+      .on("end", () => resolve(students));
+
+    stream.write(data);
+    stream.end();
+  })
+
+  if (result instanceof Error) throw result;
+
+  return result;
 }
 
 module.exports.login = async (event) => {
@@ -114,10 +136,14 @@ module.exports.getResult = async (event) => {
 
 module.exports.uploadStudents = async (event) => {
   try {
+    const filename = "students.csv";
+    const pathFile = join(__dirname, '../tmp', filename);
+    const dataCsv = await readFile(pathFile, "utf-8");
+
     const params = {
       Bucket: "students-bucket",
-      Key: "teste2.csv",
-      Body: Buffer.from("generic message to test 1")
+      Key: filename,
+      Body: dataCsv
     };
 
     client
@@ -153,5 +179,12 @@ module.exports.hookStudent = async (event, context) => {
 
   const response = await client.send(command);
   const responseCSV = await response.Body.transformToString();
-  console.log("response CSV:::", responseCSV);
+  const responseCSVMapped = await proccessCsvData(responseCSV);
+
+  console.log("response mapped::", responseCSVMapped);
+
+  return formatResponse({
+    statusCode: 200,
+    response: { students: responseCSVMapped }
+  })
 };
